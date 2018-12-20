@@ -4,21 +4,27 @@
   "private": true,
   "main": "index.js",
   "dependencies": {
-    "konva": "1.7.6",
-    "react": "16.0.0",
-    "react-dom": "16.0.0",
-    "react-konva": "1.6.4",
-    "react-redux": "5.0.7",
+    "konva": "^2.6.0",
+    "react": "16.5.2",
+    "react-dom": "16.5.2",
+    "react-konva": "16.5.2",
+    "react-redux": "^5.1.1",
     "redux": "latest",
     "suncalc": "^1.8.0"
   },
   "devDependencies": {
-    "react-scripts": "1.0.0"
+    "react-scripts": "2.1.1"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
-  }
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }

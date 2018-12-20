@@ -6,14 +6,14 @@ const initialState = {
       y: 150,
       width: 100,
       height: 50,
-      depth: 50,
+      depth: 20,
       rotation: 0,
       isDragging: false
     },
     {
       id: 2,
-      x: 150,
-      y: 350,
+      x: 480,
+      y: 300,
       width: 150,
       height: 50,
       depth: 50,
@@ -22,6 +22,16 @@ const initialState = {
     },
     {
       id: 3,
+      x: 400,
+      y: 250,
+      width: 100,
+      height: 50,
+      depth: 200,
+      rotation: -80,
+      isDragging: false
+    },
+    {
+      id: 4,
       x: 250,
       y: 450,
       width: 100,

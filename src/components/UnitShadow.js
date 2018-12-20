@@ -4,7 +4,7 @@ import { calcShadow } from '../helper';
 
 class UnitShadow extends Component {
   state = {
-    color: 'red'
+    color: 'black'
   };
   render() {
     const lat = 31.2304;
@@ -16,11 +16,6 @@ class UnitShadow extends Component {
       lng,
       depth
     );
-    let start = (degree - rotation) / 90;
-    while (start < 0) {
-      start += 4;
-    }
-    start = Math.floor(start);
 
     const rot = (rotation * Math.PI) / 180;
 
@@ -35,11 +30,14 @@ class UnitShadow extends Component {
     const x = [x1, x2, x3, x4];
     const y = [y1, y2, y3, y4];
 
+    let start = Math.floor((degree - rotation) / 90);
+    start = ((start % 4) + 4) % 4;
+
     const points = [
-      x[start % 4],
-      y[start % 4],
-      x[start % 4] + shiftX,
-      y[start % 4] + shiftY,
+      x[start],
+      y[start],
+      x[start] + shiftX,
+      y[start] + shiftY,
       x[(start + 1) % 4] + shiftX,
       y[(start + 1) % 4] + shiftY,
       x[(start + 2) % 4] + shiftX,

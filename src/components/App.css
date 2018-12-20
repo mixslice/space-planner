@@ -23,3 +23,15 @@ html, body {
   flex: 1;
   background: #282c34 url(../assets/bg_grid.png) top left repeat;
 }
+
+.Toolbar {
+  display: flex;
+  align-items: center;
+}
+
+.Control {
+  display: flex;
+  align-items: center;
+  margin: 10px;
+  font-size: 16px;
+}
