@@ -42,7 +42,8 @@ class Unit extends Component {
     const isHighBuilding = depth > 24;
 
     const Q = QValue(depth);
-    const frontLen = 18 * Q;
+    const frontLen1 = 18 * Q;
+    const frontLen2 = 24 * Q;
     const backLen = 18 * Q;
     const sideLen = 13 * Q;
 
@@ -94,7 +95,11 @@ class Unit extends Component {
           width={width}
           height={height}
           rotation={rotation}
-          fill="green"
+          fill={
+            isHighBuilding
+              ? this.props.highBuildingColor
+              : this.props.defaultColor
+          }
           closed
           draggable
           onDragStart={this.handleDragStart}
@@ -163,13 +168,26 @@ class Unit extends Component {
               <Rect
                 y={height}
                 width={width}
-                height={frontLen}
+                height={frontLen1}
                 fill="yellow"
                 opacity={0.5}
                 closed
               />
-              <Circle x={width} y={height} radius={frontLen} stroke="fuchsia" />
-              <Circle x={0} y={height} radius={frontLen} stroke="fuchsia" />
+              <Rect
+                y={height}
+                width={width}
+                height={frontLen2}
+                fill="yellow"
+                opacity={0.5}
+                closed
+              />
+              <Circle
+                x={width}
+                y={height}
+                radius={frontLen2}
+                stroke="fuchsia"
+              />
+              <Circle x={0} y={height} radius={frontLen2} stroke="fuchsia" />
             </Group>
           )}
         </Group>
@@ -177,6 +195,11 @@ class Unit extends Component {
     );
   }
 }
+
+Unit.defaultProps = {
+  defaultColor: 'green',
+  highBuildingColor: '#fff'
+};
 
 export default connect(
   null,

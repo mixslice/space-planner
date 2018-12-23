@@ -4,11 +4,13 @@
   "private": true,
   "dependencies": {
     "konva": "^2.6.0",
+    "localforage": "^1.7.3",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
     "react-konva": "^16.6.31",
     "react-redux": "^5.1.1",
     "redux": "latest",
+    "redux-persist": "^5.10.0",
     "suncalc": "^1.8.0"
   },
   "devDependencies": {

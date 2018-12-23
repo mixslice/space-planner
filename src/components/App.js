@@ -7,6 +7,8 @@ import UnitShadow from './UnitShadow';
 import TransformerComponent from './TransformerComponent';
 import './App.css';
 
+const TOOLBAR_HEIGHT = 44;
+
 class App extends Component {
   state = {
     // shadow
@@ -49,7 +51,7 @@ class App extends Component {
   updateDimensions = () => {
     this.setState({
       width: window.innerWidth,
-      height: window.innerHeight
+      height: window.innerHeight - TOOLBAR_HEIGHT
     });
   };
 
