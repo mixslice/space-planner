@@ -7,6 +7,7 @@ import { Provider } from 'react-redux';
 import configureStore from './store/configureStore';
 
 const { store, persistor } = configureStore();
+// persistor.purge();
 
 ReactDOM.render(
   <Provider store={store}>

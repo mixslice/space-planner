@@ -22,7 +22,11 @@ html, body {
 
 .App-canvas {
   flex: 1;
-  background: #282c34 url(../assets/bg_grid.png) top left repeat;
+  /* background-color:  #282c34; */
+  background-color: #fff;
+  background-image: url(../assets/bg_grid.png);
+  background-position: top left;
+  background-repeat: repeat;
 }
 
 .Toolbar {

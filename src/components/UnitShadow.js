@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { Line } from 'react-konva';
 import { calcShadow } from '../helper';
 
@@ -6,16 +7,13 @@ class UnitShadow extends Component {
   state = {
     color: 'black'
   };
+
   render() {
-    const lat = 31.2304;
-    const lng = 121.4737;
-    const { x: x1, y: y1, width, height, depth, rotation } = this.props.target;
-    const { shiftX, shiftY, degree } = calcShadow(
-      this.props.date,
-      lat,
-      lng,
-      depth
-    );
+    const { lat, lng, dateValue } = this.props.location;
+    const date = new Date(dateValue);
+
+    const { x: x1, y: y1, width, height, depth, rotation } = this.props.data;
+    const { shiftX, shiftY, degree } = calcShadow(date, lat, lng, depth);
 
     const rot = (rotation * Math.PI) / 180;
 
@@ -58,8 +56,9 @@ UnitShadow.defaultProps = {
   rotation: 0,
   width: 50,
   height: 50,
-  depth: 50,
-  date: new Date('2018-01-20 08:00')
+  depth: 50
 };
 
-export default UnitShadow;
+export default connect(({ location }) => ({
+  location
+}))(UnitShadow);

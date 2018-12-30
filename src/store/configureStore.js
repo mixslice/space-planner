@@ -1,7 +1,7 @@
 import { createStore } from 'redux';
 import { persistStore, persistReducer } from 'redux-persist';
 import localForage from 'localforage';
-import rootReducer from './reducer';
+import rootReducer from '../reducer';
 
 const persistConfig = {
   key: 'root',

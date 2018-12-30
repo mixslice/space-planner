@@ -1,25 +1,21 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Stage, Layer } from 'react-konva';
-import SunCalc from 'suncalc';
+import { Stage, Layer, FastLayer } from 'react-konva';
+import TestLayer from './TestLayer';
 import Unit from './Unit';
 import UnitShadow from './UnitShadow';
 import TransformerComponent from './TransformerComponent';
+import Toolbar from './Toolbar';
 import './App.css';
 
 const TOOLBAR_HEIGHT = 44;
 
 class App extends Component {
   state = {
-    // shadow
-    startDate: null,
-    max: 0,
-    value: 0,
-    showsShadow: false,
-    showsRef: true,
     // window
     width: 0,
-    height: 0
+    height: 0,
+    selectedShapeName: null
   };
 
   componentWillMount() {
@@ -28,20 +24,6 @@ class App extends Component {
 
   componentDidMount() {
     window.addEventListener('resize', this.updateDimensions);
-
-    const lat = 31.2304;
-    const lng = 121.4737;
-    const { sunriseEnd, sunsetStart } = SunCalc.getTimes(
-      new Date('2018-01-20'),
-      lat,
-      lng
-    );
-    const steps = Math.floor((sunsetStart - sunriseEnd) / 30 / 60 / 1000);
-    this.setState({
-      startDate: sunriseEnd.valueOf(),
-      max: steps,
-      value: Math.floor(steps / 3)
-    });
   }
 
   componentWillUnmount() {
@@ -72,7 +54,7 @@ class App extends Component {
 
     // find clicked rect by its name
     const name = e.target.name();
-    const rect = this.props.targets.find(t => String(t.id) === name);
+    const rect = this.props.units.find(t => String(t.id) === name);
     if (rect) {
       this.setState({
         selectedShapeName: name
@@ -87,63 +69,33 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <div className="Toolbar">
-          <div className="Control">
-            <input
-              type="checkbox"
-              checked={this.state.showsRef}
-              onChange={e => {
-                this.setState({ showsRef: e.target.checked });
-              }}
-            />
-            <label>显示参考</label>
-          </div>
-          <div className="Control">
-            <input
-              type="checkbox"
-              checked={this.state.showsShadow}
-              onChange={e => {
-                this.setState({ showsShadow: e.target.checked });
-              }}
-            />
-            <label>显示阴影</label>
-          </div>
-          <div className="Control">
-            <input
-              type="range"
-              min="0"
-              max={this.state.max}
-              value={this.state.value}
-              onChange={e => {
-                this.setState({ value: e.target.value });
-              }}
-            />
-          </div>
-        </div>
+        <Toolbar />
         <div className="App-canvas">
           <Stage
             width={this.state.width}
             height={this.state.height}
             onMouseDown={this.handleStageMouseDown}
           >
-            {this.state.startDate && this.state.showsShadow && (
-              <Layer opacity={0.5}>
-                {this.props.targets.map(t => {
-                  const date = new Date(
-                    this.state.startDate + this.state.value * 30 * 60 * 1000
-                  );
-                  return <UnitShadow key={t.id} target={t} date={date} />;
-                })}
-              </Layer>
+            {this.props.config.showsShadow && (
+              <FastLayer opacity={0.5}>
+                {this.props.units.map(t => (
+                  <UnitShadow key={t.id} data={t} />
+                ))}
+              </FastLayer>
             )}
             <Layer>
-              {this.props.targets.map(t => (
-                <Unit key={t.id} target={t} showsRef={this.state.showsRef} />
+              {this.props.units.map(t => (
+                <Unit
+                  key={t.id}
+                  data={t}
+                  showsRef={this.props.config.showsRef}
+                />
               ))}
               <TransformerComponent
                 selectedShapeName={this.state.selectedShapeName}
               />
             </Layer>
+            <TestLayer />
           </Stage>
         </div>
       </div>
@@ -151,6 +103,7 @@ class App extends Component {
   }
 }
 
-export default connect(({ targets }) => ({
-  targets
+export default connect(({ units, config }) => ({
+  units,
+  config
 }))(App);

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Rect, Line, Wedge, Group, Circle } from 'react-konva';
-import { updateTarget } from '../store/reducer';
+import { updateUnit } from '../reducer/units';
 
 class Unit extends Component {
   constructor(props) {
@@ -11,26 +11,26 @@ class Unit extends Component {
   }
 
   handleDragStart = e => {
-    this.offsetX = this.props.target.x - e.target.x();
-    this.offsetY = this.props.target.y - e.target.y();
-    this.props.updateTarget(this.props.target.id, {
+    this.offsetX = this.props.data.x - e.target.x();
+    this.offsetY = this.props.data.y - e.target.y();
+    this.props.updateUnit(this.props.data.id, {
       isDragging: true
     });
   };
   handleDragMove = e => {
-    this.props.updateTarget(this.props.target.id, {
+    this.props.updateUnit(this.props.data.id, {
       x: this.offsetX + e.target.x(),
       y: this.offsetY + e.target.y()
     });
   };
   handleDragEnd = () => {
-    this.props.updateTarget(this.props.target.id, {
+    this.props.updateUnit(this.props.data.id, {
       isDragging: false
     });
   };
 
   handleTransform = () => {
-    this.props.updateTarget(this.props.target.id, {
+    this.props.updateUnit(this.props.data.id, {
       x: this.node.x(),
       y: this.node.y(),
       rotation: this.node.rotation()
@@ -38,7 +38,7 @@ class Unit extends Component {
   };
 
   render() {
-    const { x: x1, y: y1, width, height, depth, rotation } = this.props.target;
+    const { x: x1, y: y1, width, height, depth, rotation } = this.props.data;
     const isHighBuilding = depth > 24;
 
     const Q = QValue(depth);
@@ -89,7 +89,7 @@ class Unit extends Component {
           ref={node => {
             this.node = node;
           }}
-          name={String(this.props.target.id)}
+          name={String(this.props.data.id)}
           x={x1}
           y={y1}
           width={width}
@@ -100,6 +100,8 @@ class Unit extends Component {
               ? this.props.highBuildingColor
               : this.props.defaultColor
           }
+          stroke="black"
+          strokeWidth={1}
           closed
           draggable
           onDragStart={this.handleDragStart}
@@ -198,13 +200,13 @@ class Unit extends Component {
 
 Unit.defaultProps = {
   defaultColor: 'green',
-  highBuildingColor: '#fff'
+  highBuildingColor: '#ddd'
 };
 
 export default connect(
   null,
   {
-    updateTarget
+    updateUnit
   }
 )(Unit);
 
