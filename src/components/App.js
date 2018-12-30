@@ -53,8 +53,9 @@ class App extends Component {
     }
 
     // find clicked rect by its name
-    const name = e.target.name();
-    const rect = this.props.units.find(t => String(t.id) === name);
+    const name =
+      e.target.findAncestor('#unit') && e.target.findAncestor('#unit').name();
+    const rect = this.props.units.find(t => t.id === name);
     if (rect) {
       this.setState({
         selectedShapeName: name

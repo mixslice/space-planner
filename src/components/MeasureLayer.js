@@ -18,7 +18,12 @@ class MeasureLayer extends Component {
           const { points, distance, isGable } = distanceBetweenUnits(unit0, d);
           const limit = calcLimit(unit0, d, isGable);
           return (
-            <MeasureLine points={points} distance={distance} limit={limit} />
+            <MeasureLine
+              key={d.id}
+              points={points}
+              distance={distance}
+              limit={limit}
+            />
           );
         });
     }

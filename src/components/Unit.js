@@ -97,21 +97,17 @@ class Unit extends Component {
         {isHighBuilding && this.props.showsRef && (
           <Line points={points} fill="red" opacity={0.5} closed />
         )}
-        <Rect
+        <Group
           ref={node => {
             this.node = node;
           }}
-          name={String(this.props.data.id)}
+          id="unit"
+          name={this.props.data.id}
           x={x1}
           y={y1}
+          rotation={rotation}
           width={width}
           height={height}
-          rotation={rotation}
-          fill={this.props.color[buildingType]}
-          stroke="black"
-          strokeWidth={1}
-          opacity={0.8}
-          closed
           draggable
           onDragStart={this.handleDragStart}
           onDragMove={this.handleDragMove}
@@ -119,8 +115,16 @@ class Unit extends Component {
           onTransformStart={this.handleTransformStart}
           onTransform={this.handleTransform}
           onTransformEnd={this.handleTransformEnd}
-        />
-        <Group x={x1} y={y1} rotation={rotation}>
+        >
+          <Rect
+            width={width}
+            height={height}
+            fill={this.props.color[buildingType]}
+            stroke="black"
+            strokeWidth={1}
+            opacity={0.8}
+            closed
+          />
           <Label>
             <Tag fill="black" pointerDirection="bottom" />
             <Text
