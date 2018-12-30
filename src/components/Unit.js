@@ -1,7 +1,17 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Rect, Line, Wedge, Group, Circle } from 'react-konva';
+import {
+  Rect,
+  Line,
+  Wedge,
+  Group,
+  Circle,
+  Label,
+  Tag,
+  Text
+} from 'react-konva';
 import { updateUnit } from '../reducer/units';
+import { getCoords, getUnitType, UNIT_TYPE, getQValue } from '../helper';
 
 class Unit extends Component {
   constructor(props) {
@@ -29,6 +39,11 @@ class Unit extends Component {
     });
   };
 
+  handleTransformStart = e => {
+    this.props.updateUnit(this.props.data.id, {
+      isDragging: true
+    });
+  };
   handleTransform = () => {
     this.props.updateUnit(this.props.data.id, {
       x: this.node.x(),
@@ -36,48 +51,45 @@ class Unit extends Component {
       rotation: this.node.rotation()
     });
   };
+  handleTransformEnd = e => {
+    this.props.updateUnit(this.props.data.id, {
+      isDragging: false
+    });
+  };
 
   render() {
     const { x: x1, y: y1, width, height, depth, rotation } = this.props.data;
-    const isHighBuilding = depth > 24;
+    const buildingType = getUnitType(depth);
+    const isHighBuilding = buildingType === UNIT_TYPE.HIGH;
 
-    const Q = QValue(depth);
+    const Q = getQValue(depth);
     const frontLen1 = 18 * Q;
     const frontLen2 = 24 * Q;
     const backLen = 18 * Q;
     const sideLen = 13 * Q;
 
-    const rot = (rotation * Math.PI) / 180;
-
-    const x2 = x1 + width * Math.cos(rot);
-    const x4 = x1 - height * Math.sin(rot);
-    const x3 = x4 + x2 - x1;
-    const s = Math.max(x1, x2, x3, x4) - Math.min(x1, x2, x3, x4);
+    const coords = getCoords(this.props.data);
+    const s =
+      Math.max(coords[0].x, coords[1].x, coords[2].x, coords[3].x) -
+      Math.min(coords[0].x, coords[1].x, coords[2].x, coords[3].x);
     const shadowLen = Math.max((depth - 24) * 0.3 + s, 29);
-
-    const y2 = y1 + width * Math.sin(rot);
-    const y4 = y1 + height * Math.cos(rot);
-    const y3 = y4 + y2 - y1;
-
-    const x = [x1, x2, x3, x4];
-    const y = [y1, y2, y3, y4];
 
     let start = Math.floor(-rotation / 90);
     start = ((start % 4) + 4) % 4;
 
     const points = [
-      x[start],
-      y[start],
-      x[start],
-      y[start] - shadowLen,
-      x[(start + 1) % 4],
-      y[(start + 1) % 4] - shadowLen,
-      x[(start + 2) % 4],
-      y[(start + 2) % 4] - shadowLen,
-      x[(start + 2) % 4],
-      y[(start + 2) % 4],
-      x[(start + 3) % 4],
-      y[(start + 3) % 4]
+      coords[start].x,
+      coords[start].y,
+      coords[start].x,
+      coords[start].y - shadowLen,
+      coords[(start + 1) % 4].x,
+      coords[(start + 1) % 4].y - shadowLen,
+      coords[(start + 2) % 4].x,
+      coords[(start + 2) % 4].y - shadowLen,
+      coords[(start + 2) % 4].x,
+      coords[(start + 2) % 4].y,
+      coords[(start + 3) % 4].x,
+      coords[(start + 3) % 4].y
     ];
 
     return (
@@ -95,20 +107,30 @@ class Unit extends Component {
           width={width}
           height={height}
           rotation={rotation}
-          fill={
-            isHighBuilding
-              ? this.props.highBuildingColor
-              : this.props.defaultColor
-          }
+          fill={this.props.color[buildingType]}
           stroke="black"
           strokeWidth={1}
+          opacity={0.8}
           closed
           draggable
           onDragStart={this.handleDragStart}
           onDragMove={this.handleDragMove}
           onDragEnd={this.handleDragEnd}
+          onTransformStart={this.handleTransformStart}
           onTransform={this.handleTransform}
+          onTransformEnd={this.handleTransformEnd}
         />
+        <Group x={x1} y={y1} rotation={rotation}>
+          <Label>
+            <Tag fill="black" pointerDirection="bottom" />
+            <Text
+              text={`${buildingType}: ${depth}`}
+              fontSize={12}
+              padding={2}
+              fill="white"
+            />
+          </Label>
+        </Group>
         <Group x={x1} y={y1} rotation={rotation}>
           {this.props.showsRef && (
             <Group>
@@ -199,8 +221,11 @@ class Unit extends Component {
 }
 
 Unit.defaultProps = {
-  defaultColor: 'green',
-  highBuildingColor: '#ddd'
+  color: {
+    low: '#D3FFCF',
+    middle: '#CFDEFF',
+    high: '#FFCFDF'
+  }
 };
 
 export default connect(
@@ -209,17 +234,3 @@ export default connect(
     updateUnit
   }
 )(Unit);
-
-const QValue = height => {
-  if (height <= 50) {
-    return 1;
-  } else if (height <= 75) {
-    return 1.2;
-  } else if (height <= 100) {
-    return 1.4;
-  } else if (height <= 200) {
-    return 1.6;
-  } else {
-    return 1.8;
-  }
-};

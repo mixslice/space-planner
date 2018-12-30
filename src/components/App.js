@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Stage, Layer, FastLayer } from 'react-konva';
-import TestLayer from './TestLayer';
+import MeasureLayer from './MeasureLayer';
 import Unit from './Unit';
 import UnitShadow from './UnitShadow';
 import TransformerComponent from './TransformerComponent';
@@ -95,7 +95,7 @@ class App extends Component {
                 selectedShapeName={this.state.selectedShapeName}
               />
             </Layer>
-            <TestLayer />
+            <MeasureLayer data={this.props.units} />
           </Stage>
         </div>
       </div>

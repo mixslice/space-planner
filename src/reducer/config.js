@@ -1,6 +1,6 @@
 const initialState = {
   showsShadow: false,
-  showsRef: true
+  showsRef: false
 };
 
 export default (state = initialState, action) => {

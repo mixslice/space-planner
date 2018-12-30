@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Line } from 'react-konva';
-import { calcShadow } from '../helper';
+import { calcShadow, getCoords } from '../helper';
 
 class UnitShadow extends Component {
   state = {
@@ -12,38 +12,26 @@ class UnitShadow extends Component {
     const { lat, lng, dateValue } = this.props.location;
     const date = new Date(dateValue);
 
-    const { x: x1, y: y1, width, height, depth, rotation } = this.props.data;
+    const { depth, rotation } = this.props.data;
     const { shiftX, shiftY, degree } = calcShadow(date, lat, lng, depth);
-
-    const rot = (rotation * Math.PI) / 180;
-
-    const x2 = x1 + width * Math.cos(rot);
-    const x4 = x1 - height * Math.sin(rot);
-    const x3 = x4 + x2 - x1;
-
-    const y2 = y1 + width * Math.sin(rot);
-    const y4 = y1 + height * Math.cos(rot);
-    const y3 = y4 + y2 - y1;
-
-    const x = [x1, x2, x3, x4];
-    const y = [y1, y2, y3, y4];
+    const coords = getCoords(this.props.data);
 
     let start = Math.floor((degree - rotation) / 90);
     start = ((start % 4) + 4) % 4;
 
     const points = [
-      x[start],
-      y[start],
-      x[start] + shiftX,
-      y[start] + shiftY,
-      x[(start + 1) % 4] + shiftX,
-      y[(start + 1) % 4] + shiftY,
-      x[(start + 2) % 4] + shiftX,
-      y[(start + 2) % 4] + shiftY,
-      x[(start + 2) % 4],
-      y[(start + 2) % 4],
-      x[(start + 3) % 4],
-      y[(start + 3) % 4]
+      coords[start].x,
+      coords[start].y,
+      coords[start].x + shiftX,
+      coords[start].y + shiftY,
+      coords[(start + 1) % 4].x + shiftX,
+      coords[(start + 1) % 4].y + shiftY,
+      coords[(start + 2) % 4].x + shiftX,
+      coords[(start + 2) % 4].y + shiftY,
+      coords[(start + 2) % 4].x,
+      coords[(start + 2) % 4].y,
+      coords[(start + 3) % 4].x,
+      coords[(start + 3) % 4].y
     ];
 
     return <Line points={points} fill={this.state.color} closed />;

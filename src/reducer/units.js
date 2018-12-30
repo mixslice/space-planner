@@ -1,42 +1,54 @@
+import uuid from 'uuid/v4';
+
 const initialState = [
   {
-    id: 1,
-    x: 150,
-    y: 150,
+    id: uuid(),
+    x: 650,
+    y: 160,
     width: 100,
-    height: 50,
+    height: 40,
     depth: 20,
     rotation: 0,
     isDragging: false
   },
   {
-    id: 2,
+    id: uuid(),
     x: 480,
     y: 300,
-    width: 150,
-    height: 50,
+    width: 100,
+    height: 40,
     depth: 50,
     rotation: -20,
     isDragging: false
   },
   {
-    id: 3,
+    id: uuid(),
     x: 400,
     y: 250,
     width: 100,
-    height: 50,
-    depth: 200,
+    height: 40,
+    depth: 10,
     rotation: -80,
     isDragging: false
   },
   {
-    id: 4,
+    id: uuid(),
     x: 250,
     y: 450,
     width: 100,
-    height: 50,
+    height: 40,
     depth: 100,
     rotation: 30,
+    isDragging: false
+  },
+  {
+    id: uuid(),
+    x: 550,
+    y: 450,
+    width: 100,
+    height: 40,
+    depth: 15,
+    rotation: 0,
     isDragging: false
   }
 ];
