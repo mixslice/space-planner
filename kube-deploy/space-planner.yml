@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: space-planner
+  namespace: default
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: space-planner
+    spec:
+      imagePullSecrets:
+        - name: aws-ecr-cn-north-1
+      containers:
+        - image: 493490470276.dkr.ecr.cn-north-1.amazonaws.com.cn/space-planner:0.1
+          imagePullPolicy: Always
+          name: space-planner
+          ports:
+            - containerPort: 80

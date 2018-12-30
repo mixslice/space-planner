@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: space-planner
+  namespace: default
+  labels:
+    app: space-planner
+
+spec:
+  selector:
+    app: space-planner
+
+  ports:
+  - port: 5000
+    targetPort: 80
+    protocol: TCP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: space-planner
+  namespace: default
+spec:
+  rules:
+  - host: spaceplanner.cskinai.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: space-planner
+          servicePort: 5000
