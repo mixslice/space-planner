@@ -45,10 +45,13 @@ class Unit extends Component {
     });
   };
   handleTransform = () => {
+    let rotation = this.node.rotation() % 360;
+    rotation = rotation > 180 ? -(360 - rotation) : rotation;
+    rotation = rotation <= -180 ? 360 + rotation : rotation;
     this.props.updateUnit(this.props.data.id, {
       x: this.node.x(),
       y: this.node.y(),
-      rotation: this.node.rotation()
+      rotation
     });
   };
   handleTransformEnd = e => {

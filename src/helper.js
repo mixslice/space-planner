@@ -129,7 +129,35 @@ export const pointToSeg = (point, seg) => {
   return { intersection, distance, isVertex };
 };
 
-export const rayIntersect = (ray, seg) => {};
+export const isRayIntersect = (ray, seg) => {
+  const [p1, p2] = ray;
+  const [p3, p4] = seg;
+  const getAng = (a, b) => {
+    let ang;
+    if (a.y === b.y) {
+      ang = a.x > b.x ? 0 : Math.PI;
+    } else {
+      ang = -Math.atan((a.x - b.x) / (a.y - b.y));
+      if (a.y < b.y) {
+        ang += a.x < b.x ? Math.PI : -Math.PI;
+      }
+    }
+    if (ang < 0) {
+      ang += Math.PI * 2;
+    }
+    return ang;
+  };
+
+  const ang1 = getAng(p1, p4);
+  const ang2 = getAng(p1, p3);
+  const ang3 = getAng(p1, p2);
+  const inRange = ang3 > Math.min(ang1, ang2) && ang3 < Math.max(ang1, ang2);
+  if (Math.abs(ang1 - ang2) < Math.PI) {
+    return inRange;
+  } else {
+    return !inRange;
+  }
+};
 
 export const distanceBetweenUnits = (unit1, unit2) => {
   const coords1 = getCoords(unit1);
@@ -165,7 +193,9 @@ export const distanceBetweenUnits = (unit1, unit2) => {
   return {
     points: [point1, point2],
     distance: minDistance,
-    isGable
+    isGable,
+    coords1,
+    coords2
   };
 };
 
@@ -184,6 +214,40 @@ export const checkRangeIntersection = (range1, range2) => {
   return true;
 };
 
+export const transformCoodinate = (
+  point,
+  zero = { x: 0, y: 0 },
+  rotation = 0
+) => {
+  const theta = (rotation * Math.PI) / 180;
+  const cosT = Math.cos(theta);
+  const sinT = Math.sin(theta);
+  const x = (point.x - zero.x) * cosT + (point.y - zero.y) * sinT;
+  const y = -(point.x - zero.x) * sinT + (point.y - zero.y) * cosT;
+  return { x, y };
+};
+
+export const checkFacing = (unit1, unit2) => {
+  const { x: x1, y: y1 } = transformCoodinate(
+    { x: unit2.x, y: unit2.y },
+    { x: unit1.x, y: unit1.y },
+    unit1.rotation
+  );
+  if (y1 < 0) return false;
+
+  const rotation = unit2.rotation - unit1.rotation;
+  const rot = (rotation * Math.PI) / 180;
+
+  const x2 = x1 + unit2.width * Math.cos(rot);
+  const x4 = x1 - unit2.height * Math.sin(rot);
+  const x3 = x4 + x2 - x1;
+
+  const range1 = [Math.min(x1, x2, x3, x4), Math.max(x1, x2, x3, x4)];
+  const range2 = [0, unit2.width];
+
+  return checkRangeIntersection(range1, range2);
+};
+
 export const calcLimit = (unit1, unit2, isGable) => {
   let limit = 0;
   const unitType1 = getUnitType(unit1.depth);
@@ -191,6 +255,7 @@ export const calcLimit = (unit1, unit2, isGable) => {
   const range1 = getShadowRange(unit1);
   const range2 = getShadowRange(unit2);
   const isIntersection = checkRangeIntersection(range1, range2);
+  let isFacing = false;
 
   if (isIntersection) {
     let topUnit;
@@ -239,21 +304,30 @@ export const calcLimit = (unit1, unit2, isGable) => {
       // rule 21
       limit = Math.max(limit, 18 * getQValue(topUnit.depth));
     }
-    // } else if (isFacing) {
-    // TODO: rule 20.2(1)
   } else {
-    if (unitType1 === UNIT_TYPE.HIGH) {
-      const qValue = getQValue(unit1.depth);
-      // rule 20.2(2), 20.2(3)
-      limit = isGable ? 13 * qValue : 18 * qValue;
+    // rule 20.2(1)
+    if (checkFacing(unit1, unit2) && unitType2 === UNIT_TYPE.HIGH) {
+      isFacing = true;
+      limit = Math.max(limit, 24 * getQValue(unit2.depth));
     }
-    if (unitType2 === UNIT_TYPE.HIGH) {
-      const qValue = getQValue(unit2.depth);
-      // rule 20.2(2), 20.2(3)
-      limit = Math.max(limit, isGable ? 13 * qValue : 18 * qValue);
+    if (checkFacing(unit2, unit1) && unitType1 === UNIT_TYPE.HIGH) {
+      isFacing = true;
+      limit = Math.max(limit, 24 * getQValue(unit1.depth));
     }
-    // rule 15
-    limit = Math.max(limit, 8);
+    if (!isFacing) {
+      if (unitType1 === UNIT_TYPE.HIGH) {
+        const qValue = getQValue(unit1.depth);
+        // rule 20.2(2), 20.2(3)
+        limit = isGable ? 13 * qValue : 18 * qValue;
+      }
+      if (unitType2 === UNIT_TYPE.HIGH) {
+        const qValue = getQValue(unit2.depth);
+        // rule 20.2(2), 20.2(3)
+        limit = Math.max(limit, isGable ? 13 * qValue : 18 * qValue);
+      }
+      // rule 15
+      limit = Math.max(limit, isGable ? 8 : 13);
+    }
   }
-  return limit;
+  return { limit, isIntersection, isFacing };
 };

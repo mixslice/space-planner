@@ -1,41 +1,51 @@
 import React, { Component } from 'react';
-import { Layer } from 'react-konva';
-import { distanceBetweenUnits, calcLimit } from '../helper';
+import { distanceBetweenUnits, calcLimit, checkFacing } from '../helper';
 import MeasureLine from './MeasureLine';
 
 class MeasureLayer extends Component {
   render() {
-    let unit0 = this.props.data.filter(d => d.isDragging)[0];
-    if (unit0) {
-      this.unit = unit0;
-    }
-    unit0 = unit0 || this.unit;
+    let draggingUnit =
+      this.props.data.filter(d => d.isDragging)[0] ||
+      this.unit ||
+      this.props.data[0];
+    this.unit = draggingUnit;
     let measures = null;
-    if (unit0) {
+    if (draggingUnit) {
       measures = this.props.data
-        .filter(d => d.id !== unit0.id)
-        .map(d => {
-          const { points, distance, isGable } = distanceBetweenUnits(unit0, d);
-          const limit = calcLimit(unit0, d, isGable);
+        .filter(d => d.id !== draggingUnit.id)
+        .map((d, idx) => {
+          const { points, distance, isGable } = distanceBetweenUnits(
+            draggingUnit,
+            d
+          );
+          const { limit, isIntersection, isFacing } = calcLimit(
+            draggingUnit,
+            d,
+            isGable
+          );
+          let color;
+          if (isIntersection) {
+            color = undefined;
+          } else if (isFacing) {
+            color = '#E75C00';
+          } else if (isGable) {
+            color = 'blue';
+          } else {
+            color = '#109D56';
+          }
           return (
             <MeasureLine
               key={d.id}
               points={points}
               distance={distance}
               limit={limit}
+              color={color}
             />
           );
         });
     }
-    return <Layer>{measures}</Layer>;
+    return measures;
   }
 }
-
-MeasureLayer.defaultProps = {
-  color: {
-    default: 'blue',
-    inShadow: undefined
-  }
-};
 
 export default MeasureLayer;

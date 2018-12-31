@@ -92,11 +92,11 @@ class App extends Component {
                   showsRef={this.props.config.showsRef}
                 />
               ))}
+              <MeasureLayer data={this.props.units} />
               <TransformerComponent
                 selectedShapeName={this.state.selectedShapeName}
               />
             </Layer>
-            <MeasureLayer data={this.props.units} />
           </Stage>
         </div>
       </div>

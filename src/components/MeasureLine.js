@@ -42,7 +42,12 @@ class MeasureLine extends Component {
             lineJoin="round"
             pointerDirection="right"
           />
-          <Text text={limit} fontSize={11} padding={2} fill="white" />
+          <Text
+            text={limit.toFixed(1)}
+            fontSize={11}
+            padding={2}
+            fill="white"
+          />
         </Label>
       </Group>
     );
