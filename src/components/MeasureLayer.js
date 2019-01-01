@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { distanceBetweenUnits, calcLimit, checkFacing } from '../helper';
+import { distanceBetweenUnits, calcLimit } from '../helper';
 import MeasureLine from './MeasureLine';
 
 class MeasureLayer extends Component {

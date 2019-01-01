@@ -57,24 +57,41 @@ export const getQValue = depth => {
   }
 };
 
+export const getRad = rotation => (rotation * Math.PI) / 180;
+
+export const transformCoodinate = (point, zero = { x: 0, y: 0 }, rad = 0) => {
+  const cosT = Math.cos(rad);
+  const sinT = Math.sin(rad);
+  const x = (point.x - zero.x) * cosT + (point.y - zero.y) * sinT;
+  const y = -(point.x - zero.x) * sinT + (point.y - zero.y) * cosT;
+  return { x, y };
+};
+
+/**
+ *
+ * @param {{x, y}} anchor rotation anchor
+ * @param {Number} radian rotation radian
+ * @param {{x, y}} offset offset to anchor
+ * @returns {{x, y}}
+ */
+export const getCoordsWithAnchor = (anchor, radian, offset) => {
+  const x =
+    anchor.x + offset.x * Math.cos(radian) - offset.y * Math.sin(radian);
+  const y =
+    anchor.y + offset.x * Math.sin(radian) + offset.y * Math.cos(radian);
+  return { x, y };
+};
+
 export const getCoords = unit => {
-  const { x: x1, y: y1, width, height, rotation } = unit;
-  const rot = (rotation * Math.PI) / 180;
+  const { x, y, width, height, rotation } = unit;
+  const rad = getRad(rotation);
 
-  const x2 = x1 + width * Math.cos(rot);
-  const x4 = x1 - height * Math.sin(rot);
-  const x3 = x4 + x2 - x1;
+  const anchor = { x, y };
+  const p2 = getCoordsWithAnchor(anchor, rad, { x: width, y: 0 });
+  const p3 = getCoordsWithAnchor(anchor, rad, { x: width, y: height });
+  const p4 = getCoordsWithAnchor(anchor, rad, { x: 0, y: height });
 
-  const y2 = y1 + width * Math.sin(rot);
-  const y4 = y1 + height * Math.cos(rot);
-  const y3 = y4 + y2 - y1;
-
-  return [
-    { x: x1, y: y1 },
-    { x: x2, y: y2 },
-    { x: x3, y: y3 },
-    { x: x4, y: y4 }
-  ];
+  return [anchor, p2, p3, p4];
 };
 
 export const between1d = (a, b, x) =>
@@ -214,38 +231,55 @@ export const checkRangeIntersection = (range1, range2) => {
   return true;
 };
 
-export const transformCoodinate = (
-  point,
-  zero = { x: 0, y: 0 },
-  rotation = 0
-) => {
-  const theta = (rotation * Math.PI) / 180;
-  const cosT = Math.cos(theta);
-  const sinT = Math.sin(theta);
-  const x = (point.x - zero.x) * cosT + (point.y - zero.y) * sinT;
-  const y = -(point.x - zero.x) * sinT + (point.y - zero.y) * cosT;
-  return { x, y };
-};
-
 export const checkFacing = (unit1, unit2) => {
   const { x: x1, y: y1 } = transformCoodinate(
     { x: unit2.x, y: unit2.y },
     { x: unit1.x, y: unit1.y },
-    unit1.rotation
+    getRad(unit1.rotation)
   );
   if (y1 < 0) return false;
 
   const rotation = unit2.rotation - unit1.rotation;
-  const rot = (rotation * Math.PI) / 180;
-
-  const x2 = x1 + unit2.width * Math.cos(rot);
-  const x4 = x1 - unit2.height * Math.sin(rot);
-  const x3 = x4 + x2 - x1;
+  const rad = getRad(rotation);
+  const anchor = { x: x1, y: y1 };
+  const { x: x2 } = getCoordsWithAnchor(anchor, rad, { x: unit2.width, y: 0 });
+  const { x: x3 } = getCoordsWithAnchor(anchor, rad, {
+    x: unit2.width,
+    y: unit2.height
+  });
+  const { x: x4 } = getCoordsWithAnchor(anchor, rad, {
+    x: 0,
+    y: unit2.height
+  });
 
   const range1 = [Math.min(x1, x2, x3, x4), Math.max(x1, x2, x3, x4)];
   const range2 = [0, unit2.width];
-
   return checkRangeIntersection(range1, range2);
+};
+
+const checkShadowFacing = (unit1, unit2, shadowRange2) => {
+  const anchor = { x: unit1.x, y: unit1.y };
+  const rad = getRad(unit1.rotation);
+  const { x: x1 } = getCoordsWithAnchor(anchor, rad, {
+    x: 0,
+    y: unit1.height + 24 * getQValue(unit2.depth)
+  });
+  const { x: x2 } = getCoordsWithAnchor(anchor, rad, {
+    x: unit1.width,
+    y: unit1.height + 24 * getQValue(unit2.depth)
+  });
+
+  let range = shadowRange2;
+  if (!shadowRange2) {
+    range = getShadowRange(unit2);
+  }
+  return checkRangeIntersection([x1, x2], range);
+};
+
+const checkRuleFacing = (unit1, unit2, shadowRange2) => {
+  return (
+    checkFacing(unit1, unit2) || checkShadowFacing(unit1, unit2, shadowRange2)
+  );
 };
 
 export const calcLimit = (unit1, unit2, isGable) => {
@@ -306,11 +340,11 @@ export const calcLimit = (unit1, unit2, isGable) => {
     }
   } else {
     // rule 20.2(1)
-    if (checkFacing(unit1, unit2) && unitType2 === UNIT_TYPE.HIGH) {
+    if (checkRuleFacing(unit1, unit2, range2) && unitType2 === UNIT_TYPE.HIGH) {
       isFacing = true;
       limit = Math.max(limit, 24 * getQValue(unit2.depth));
     }
-    if (checkFacing(unit2, unit1) && unitType1 === UNIT_TYPE.HIGH) {
+    if (checkRuleFacing(unit2, unit1, range1) && unitType1 === UNIT_TYPE.HIGH) {
       isFacing = true;
       limit = Math.max(limit, 24 * getQValue(unit1.depth));
     }
