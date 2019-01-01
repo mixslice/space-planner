@@ -215,12 +215,16 @@ export const distanceBetweenUnits = (unit1, unit2) => {
     coords2
   };
 };
-
+/**
+ *
+ * @param {*} unit
+ * @param {*} coords coordinates
+ */
 export const getShadowRange = unit => {
-  const coords = getCoords(unit);
+  const c = getCoords(unit);
   return [
-    Math.min(coords[0].x, coords[1].x, coords[2].x, coords[3].x),
-    Math.max(coords[0].x, coords[1].x, coords[2].x, coords[3].x)
+    Math.min(c[0].x, c[1].x, c[2].x, c[3].x),
+    Math.max(c[0].x, c[1].x, c[2].x, c[3].x)
   ];
 };
 
@@ -229,6 +233,19 @@ export const checkRangeIntersection = (range1, range2) => {
     return false;
   }
   return true;
+};
+
+export const getRoughDistance = (unit1, unit2) => {
+  const range1 = getShadowRange(unit1);
+  const range2 = getShadowRange(unit2);
+  let roughDistance = 0;
+  if (range1[1] < range2[0]) {
+    roughDistance = range2[0] - range1[1];
+  }
+  if (range2[1] < range1[0]) {
+    roughDistance = range1[0] - range2[1];
+  }
+  return roughDistance;
 };
 
 export const checkFacing = (unit1, unit2) => {
@@ -288,10 +305,10 @@ export const calcLimit = (unit1, unit2, isGable) => {
   const unitType2 = getUnitType(unit2.depth);
   const range1 = getShadowRange(unit1);
   const range2 = getShadowRange(unit2);
-  const isIntersection = checkRangeIntersection(range1, range2);
+  const isIntersected = checkRangeIntersection(range1, range2);
   let isFacing = false;
 
-  if (isIntersection) {
+  if (isIntersected) {
     let topUnit;
     let topUnitType;
     let belowUnit;
@@ -363,5 +380,5 @@ export const calcLimit = (unit1, unit2, isGable) => {
       limit = Math.max(limit, isGable ? 8 : 13);
     }
   }
-  return { limit, isIntersection, isFacing };
+  return { limit, isIntersected, isFacing };
 };

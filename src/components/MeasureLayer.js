@@ -1,5 +1,10 @@
 import React, { Component } from 'react';
-import { distanceBetweenUnits, calcLimit } from '../helper';
+import {
+  distanceBetweenUnits,
+  calcLimit,
+  getRoughDistance,
+  getShadowRange
+} from '../helper';
 import MeasureLine from './MeasureLine';
 
 class MeasureLayer extends Component {
@@ -14,17 +19,22 @@ class MeasureLayer extends Component {
       measures = this.props.data
         .filter(d => d.id !== draggingUnit.id)
         .map((d, idx) => {
+          const roughDistance = getRoughDistance(draggingUnit, d);
+
+          // 50 > 24 * 1.8
+          if (roughDistance > 50) return null;
+
           const { points, distance, isGable } = distanceBetweenUnits(
             draggingUnit,
             d
           );
-          const { limit, isIntersection, isFacing } = calcLimit(
+          const { limit, isIntersected, isFacing } = calcLimit(
             draggingUnit,
             d,
             isGable
           );
           let color;
-          if (isIntersection) {
+          if (isIntersected) {
             color = undefined;
           } else if (isFacing) {
             color = '#E75C00';

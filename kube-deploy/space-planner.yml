@@ -13,7 +13,7 @@ spec:
       imagePullSecrets:
         - name: aws-ecr-cn-north-1
       containers:
-        - image: 493490470276.dkr.ecr.cn-north-1.amazonaws.com.cn/space-planner:0.1.4
+        - image: 493490470276.dkr.ecr.cn-north-1.amazonaws.com.cn/space-planner:0.1.6
           imagePullPolicy: Always
           name: space-planner
           ports:
