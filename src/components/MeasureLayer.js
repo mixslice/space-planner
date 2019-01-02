@@ -1,10 +1,5 @@
 import React, { Component } from 'react';
-import {
-  distanceBetweenUnits,
-  calcLimit,
-  getRoughDistance,
-  getShadowRange
-} from '../helper';
+import { distanceBetweenUnits, calcLimit, getRoughDistance } from '../helper';
 import MeasureLine from './MeasureLine';
 
 class MeasureLayer extends Component {
@@ -19,10 +14,13 @@ class MeasureLayer extends Component {
       measures = this.props.data
         .filter(d => d.id !== draggingUnit.id)
         .map((d, idx) => {
-          const roughDistance = getRoughDistance(draggingUnit, d);
+          const { distanceX, distanceY } = getRoughDistance(draggingUnit, d);
 
-          // 50 > 24 * 1.8
-          if (roughDistance > 50) return null;
+          const paddingX = 20;
+          const paddingY = 50;
+          const depth = draggingUnit.y < d.y ? d.depth : draggingUnit.depth;
+          if (distanceX > 24 * 1.8 + paddingX) return null;
+          if (distanceY > Math.max(1.2 * depth, 29) + paddingY) return null;
 
           const { points, distance, isGable } = distanceBetweenUnits(
             draggingUnit,

@@ -146,7 +146,7 @@ export const pointToSeg = (point, seg) => {
   return { intersection, distance, isVertex };
 };
 
-export const isRayIntersect = (ray, seg) => {
+export const isRayIntersectWithSeg = (ray, seg) => {
   const [p1, p2] = ray;
   const [p3, p4] = seg;
   const getAng = (a, b) => {
@@ -175,6 +175,23 @@ export const isRayIntersect = (ray, seg) => {
     return !inRange;
   }
 };
+
+export function checkIntersection(x1, y1, x2, y2, x3, y3, x4, y4) {
+  const denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+  const numeA = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
+  // const numeB = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3);
+
+  if (denom === 0) {
+    return false;
+  }
+
+  const uA = numeA / denom;
+
+  return {
+    x: x1 + uA * (x2 - x1),
+    y: y1 + uA * (y2 - y1)
+  };
+}
 
 export const distanceBetweenUnits = (unit1, unit2) => {
   const coords1 = getCoords(unit1);
@@ -216,16 +233,17 @@ export const distanceBetweenUnits = (unit1, unit2) => {
   };
 };
 /**
- *
+ * get bounding box
  * @param {*} unit
- * @param {*} coords coordinates
  */
-export const getShadowRange = unit => {
+export const getBBox = unit => {
   const c = getCoords(unit);
-  return [
-    Math.min(c[0].x, c[1].x, c[2].x, c[3].x),
-    Math.max(c[0].x, c[1].x, c[2].x, c[3].x)
-  ];
+  return {
+    xmin: Math.min(c[0].x, c[1].x, c[2].x, c[3].x),
+    xmax: Math.max(c[0].x, c[1].x, c[2].x, c[3].x),
+    ymin: Math.min(c[0].y, c[1].y, c[2].y, c[3].y),
+    ymax: Math.max(c[0].y, c[1].y, c[2].y, c[3].y)
+  };
 };
 
 export const checkRangeIntersection = (range1, range2) => {
@@ -236,16 +254,26 @@ export const checkRangeIntersection = (range1, range2) => {
 };
 
 export const getRoughDistance = (unit1, unit2) => {
-  const range1 = getShadowRange(unit1);
-  const range2 = getShadowRange(unit2);
-  let roughDistance = 0;
-  if (range1[1] < range2[0]) {
-    roughDistance = range2[0] - range1[1];
+  const bbox1 = getBBox(unit1);
+  const bbox2 = getBBox(unit2);
+  let distanceX = 0;
+  let distanceY = 0;
+  if (bbox1.xmax < bbox2.xmin) {
+    distanceX = bbox2.xmin - bbox1.xmax;
   }
-  if (range2[1] < range1[0]) {
-    roughDistance = range1[0] - range2[1];
+  if (bbox2.xmax < bbox1.xmin) {
+    distanceX = bbox1.xmin - bbox2.xmax;
   }
-  return roughDistance;
+  if (bbox1.ymax < bbox2.ymin) {
+    distanceY = bbox2.ymin - bbox1.ymax;
+  }
+  if (bbox2.ymax < bbox1.ymin) {
+    distanceY = bbox1.ymin - bbox2.ymax;
+  }
+  return {
+    distanceX,
+    distanceY
+  };
 };
 
 export const checkFacing = (unit1, unit2) => {
@@ -259,7 +287,10 @@ export const checkFacing = (unit1, unit2) => {
   const rotation = unit2.rotation - unit1.rotation;
   const rad = getRad(rotation);
   const anchor = { x: x1, y: y1 };
-  const { x: x2 } = getCoordsWithAnchor(anchor, rad, { x: unit2.width, y: 0 });
+  const { x: x2 } = getCoordsWithAnchor(anchor, rad, {
+    x: unit2.width,
+    y: 0
+  });
   const { x: x3 } = getCoordsWithAnchor(anchor, rad, {
     x: unit2.width,
     y: unit2.height
@@ -274,37 +305,40 @@ export const checkFacing = (unit1, unit2) => {
   return checkRangeIntersection(range1, range2);
 };
 
-const checkShadowFacing = (unit1, unit2, shadowRange2) => {
-  const anchor = { x: unit1.x, y: unit1.y };
-  const rad = getRad(unit1.rotation);
-  const { x: x1 } = getCoordsWithAnchor(anchor, rad, {
-    x: 0,
-    y: unit1.height + 24 * getQValue(unit2.depth)
-  });
-  const { x: x2 } = getCoordsWithAnchor(anchor, rad, {
-    x: unit1.width,
-    y: unit1.height + 24 * getQValue(unit2.depth)
-  });
-
-  let range = shadowRange2;
-  if (!shadowRange2) {
-    range = getShadowRange(unit2);
+export const checkShadowFacing = (unit1, unit2, bbox2) => {
+  if (!bbox2) bbox2 = getBBox(unit2);
+  const {
+    0: { x: x1, y: y1 },
+    3: { x: x4, y: y4 }
+  } = getCoords(unit1);
+  const intersection = checkIntersection(
+    x1,
+    y1,
+    x4,
+    y4,
+    bbox2.xmin,
+    bbox2.ymax,
+    bbox2.xmin,
+    bbox2.ymax + 1
+  );
+  if (intersection) {
+    return intersection.y < bbox2.ymax && between1d(intersection.y, y1, y4);
   }
-  return checkRangeIntersection([x1, x2], range);
+  return false;
 };
 
-const checkRuleFacing = (unit1, unit2, shadowRange2) => {
-  return (
-    checkFacing(unit1, unit2) || checkShadowFacing(unit1, unit2, shadowRange2)
-  );
+export const checkRuleFacing = (unit1, unit2, bbox2) => {
+  return checkFacing(unit1, unit2) || checkShadowFacing(unit1, unit2, bbox2);
 };
 
 export const calcLimit = (unit1, unit2, isGable) => {
   let limit = 0;
   const unitType1 = getUnitType(unit1.depth);
   const unitType2 = getUnitType(unit2.depth);
-  const range1 = getShadowRange(unit1);
-  const range2 = getShadowRange(unit2);
+  const bbox1 = getBBox(unit1);
+  const bbox2 = getBBox(unit2);
+  const range1 = [bbox1.xmin, bbox1.xmax];
+  const range2 = [bbox2.xmin, bbox2.xmax];
   const isIntersected = checkRangeIntersection(range1, range2);
   let isFacing = false;
 
@@ -313,19 +347,19 @@ export const calcLimit = (unit1, unit2, isGable) => {
     let topUnitType;
     let belowUnit;
     let belowUnitType;
-    let shadowRange;
+    let belowBBox;
     if (unit1.y < unit2.y) {
       topUnit = unit1;
       topUnitType = unitType1;
       belowUnit = unit2;
       belowUnitType = unitType2;
-      shadowRange = range2;
+      belowBBox = bbox1;
     } else {
       topUnit = unit2;
       topUnitType = unitType2;
       belowUnit = unit1;
       belowUnitType = unitType1;
-      shadowRange = range1;
+      belowBBox = bbox1;
     }
     const kValue = getKValue(belowUnit.rotation);
     const isParallel = Math.abs(unit1.rotation - unit2.rotation) <= 30;
@@ -342,7 +376,7 @@ export const calcLimit = (unit1, unit2, isGable) => {
     } else if (belowUnitType === UNIT_TYPE.HIGH) {
       // rule 20.1
       const limitHigh =
-        (belowUnit.depth - 24) * 0.3 + shadowRange[1] - shadowRange[0];
+        (belowUnit.depth - 24) * 0.3 + belowBBox.xmax - belowBBox.xmin;
       if (limitHigh > 1.2 * belowUnit.depth) {
         // rule 20.1(1)
         limit = 1.2 * kValue * belowUnit.depth;
@@ -357,11 +391,11 @@ export const calcLimit = (unit1, unit2, isGable) => {
     }
   } else {
     // rule 20.2(1)
-    if (checkRuleFacing(unit1, unit2, range2) && unitType2 === UNIT_TYPE.HIGH) {
+    if (unitType2 === UNIT_TYPE.HIGH && checkRuleFacing(unit1, unit2, bbox2)) {
       isFacing = true;
       limit = Math.max(limit, 24 * getQValue(unit2.depth));
     }
-    if (checkRuleFacing(unit2, unit1, range1) && unitType1 === UNIT_TYPE.HIGH) {
+    if (unitType1 === UNIT_TYPE.HIGH && checkRuleFacing(unit2, unit1, bbox2)) {
       isFacing = true;
       limit = Math.max(limit, 24 * getQValue(unit1.depth));
     }
